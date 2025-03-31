@@ -9,9 +9,9 @@ def image(p):
 
 
 def kfnst(t):
-    with open('5nodes.pkl', 'rb') as file:
+    with open('10nodes.pkl', 'rb') as file:
         pairs = pickle.load(file)
-    ans = 0
+    ans = 0+0j
     print(pairs)
     for elem in pairs:
         ans += elem[1] * (elem[0] / t * image(elem[0] / t))

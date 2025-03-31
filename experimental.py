@@ -1,12 +1,13 @@
 import numpy as np
 import math
 import pickle
+from tqdm import tqdm
 from scipy.optimize import newton
 from scipy.special import gamma, comb
-from area import get_contour, get_contour_split
+from area import get_contour, get_contour_split, get_contour_exact
 
 # Задаем параметры
-n = 50  # Порядок КФНСТ
+n = 30  # Порядок КФНСТ
 s = 1  # Параметр s
 alpha_steps = 100  # Количество шагов для перебора угла α
 
@@ -74,7 +75,7 @@ def get_nodes(cont, need_alphas=False):
     coefficients = []
     n_iter = 0
     skip_n = 0
-    for dot in cont:
+    for dot in tqdm(cont, desc="processing points on contour"):
         n_iter += 1
         # 1. Находим точку z_0
         z_0 = dot[0] + 1j * dot[1]  # z_0 из контура
@@ -95,32 +96,35 @@ def get_nodes(cont, need_alphas=False):
             skip_n += 1
             continue
 
-        if skip_n > 10: print(skip_n)
+        #if skip_n > 10: print("skipped in row: ",skip_n)
         skip_n = 0
 
-        print(f"{n_iter}:z_0: {z_0}, x_alpha: {x_0_alpha}")
+        #print(f"{n_iter}:z_0: {z_0}, x_alpha: {x_0_alpha}")
         # 4. Вычисляем искомый узел КФНСТ
         p_kn = (2 * n + s - 2) * x_alpha
 
         # 5. Вычисляем коэффициент КФНСТ
         coefficients_A_kn = ((-1) ** (n + 1) * math.factorial(n) * (2 * n + s - 2) ** 2) / (
                 n ** 2 * gamma(n + s - 1) * p_kn ** 2 * (p_n_s(1 / p_kn)) ** 2)
-
+        #print(f"result n{n_iter}:p_kn: {p_kn}, coef: {coefficients_A_kn}")
         # Сохраняем результаты
         x_alphas.append(x_alpha)
         possible_nodes.append(p_kn)
         coefficients.append(coefficients_A_kn)
 
     nodes_and_coeffs = set()
-    dif_ans = 1e-3
+    dif_ans = 1e-5
     k = 0
     # Выводим результаты
     for i in range(len(possible_nodes)):
         flag = True
+        if np.isnan(possible_nodes[i]) or np.isnan(coefficients[i]):
+            continue
         for q in nodes_and_coeffs:
             if np.abs(possible_nodes[i] - q[0]) < dif_ans:
                 flag = False
                 break
+
         if flag:
             k += 1
             nodes_and_coeffs.add((possible_nodes[i], coefficients[i]))
@@ -133,29 +137,23 @@ def get_nodes(cont, need_alphas=False):
     return nodes_and_coeffs
 
 
-def save_to_file(ans):
-    k = len(ans)
+def save_to_file(data):
+    k = len(data)
     out_name = str(k) + "nodes.pkl"
     with open(out_name, 'wb') as out_file:
-        pickle.dump(ans, out_file)
+        pickle.dump(data, out_file)
         print("saved to ",out_name)
 
 
 if __name__ == "__main__":
     #generated_contour = get_contour(1e-8, 20000)
     split = True
-    split = False
+    #split = False
     if split:
-        generated_contour = get_contour_split(1e-8, desired=300)
-        input("start?")
-        ans=[]
-        i=0
-        for q in get_contour_split(1e-8, desired=300):
-            i+=1
-            cur = get_nodes(q, need_alphas=False)
-            print("completed ",i+1," part (out of 29)")
-            ans.append(cur)
-        save_to_file(ans)
+        for q in get_contour_exact(1e-8, desired=700):
+            ans = get_nodes(q)
+
+            save_to_file(ans)
     else:
         generated_contour = get_contour(1e-8, 20000)
         ans = get_nodes(generated_contour, need_alphas=False)
