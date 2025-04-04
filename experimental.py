@@ -7,7 +7,7 @@ from scipy.special import gamma, comb
 from area import get_contour, get_contour_split, get_contour_exact
 
 # Задаем параметры
-n = 20  # Порядок КФНСТ
+n = 40  # Порядок КФНСТ
 s = 1  # Параметр s
 
 '''def get_contour(tolerance, net_steps):
@@ -139,11 +139,11 @@ def get_nodes_alternative(cont, need_alphas=False):
     for dot in tqdm(cont, desc="processing points on contour"):
         try:
             # 1. Находим точку z_0
-            z_0 = dot[0] + 1j * dot[1]  # z_0 из контура
+            z_0 = dot[0]/10 + 1j * dot[1]/10  # z_0 из контура
             for m in range(10):
                 # 2. Полагаем x_0^α = -z_0
                 x_0_alpha = -z_0
-                x_0_alpha*= 0.2*m
+                #x_0_alpha*= 0.2*m
 
                 # 3. Реализуем метод Ньютона для нахождения корня
                 x_alpha = newton(p_n_s, x0=x_0_alpha, fprime2=p_n_s_prime2, maxiter=3000, tol=1e-9)
@@ -185,6 +185,7 @@ def get_nodes_alternative(cont, need_alphas=False):
             k += 1
             nodes_and_coeffs.add((possible_nodes[i], coefficients[i]))
             print(f"Узел {k}: {possible_nodes[i]}, Коэффициент: {coefficients[i]}")
+            print(f"Корень {k}: {x_alphas[i]}")
 
     if need_alphas:
         out2_name = str(k) + "x_alphas.pkl"

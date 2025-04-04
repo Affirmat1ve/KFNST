@@ -3,7 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.special import gamma, comb
 import numpy as np
 
-n=5
+n=40
 s=1
 
 
