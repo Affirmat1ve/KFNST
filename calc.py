@@ -9,7 +9,7 @@ def image(p):
 
 
 def kfnst(t):
-    with open('6n6nodes.pkl', 'rb') as file:
+    with open('40n7nodes.pkl', 'rb') as file:
         pairs = list(pickle.load(file))
         pairs.sort(key=lambda x:x[0])
     ans = 0+0j

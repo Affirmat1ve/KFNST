@@ -47,7 +47,7 @@ def p_n_s(x):
     total = 0 + 0j
     for k in range(n + 1):
         coeff = (-1) ** (n - k) * comb(n, k) * pochhammer(n + s - 1, k)
-        total += coeff * x ** k
+        total += coeff *( x ** k)
     return total
 
 
@@ -139,7 +139,7 @@ def get_nodes_alternative(cont, need_alphas=False):
     for dot in tqdm(cont, desc="processing points on contour"):
         try:
             # 1. Находим точку z_0
-            z_0 = dot[0]/10 + 1j * dot[1]/10  # z_0 из контура
+            z_0 = dot[0] + 1j * dot[1]  # z_0 из контура
             for m in range(10):
                 # 2. Полагаем x_0^α = -z_0
                 x_0_alpha = -z_0
