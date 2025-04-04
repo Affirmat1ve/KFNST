@@ -167,5 +167,5 @@ def res_print(intersection_re, intersection_im):
 
 
 if __name__ == "__main__":
-    for q in get_contour_exact(1e-8, desired=1000, visualize=True):
+    for q in get_contour_exact(1e-8, desired=7000, visualize=True):
         print(q)
