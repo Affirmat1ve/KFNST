@@ -5,7 +5,7 @@ from mpmath import mp
 import pickle
 
 
-mp.dps = 50
+mp.dps =10
 
 
 def image(p):
