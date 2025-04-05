@@ -149,8 +149,8 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
         plt.title('Пересечения функции в комплексной плоскости')
         plt.xlabel('Re(Z)')
         plt.ylabel('Im(Z)')
-        plt.xticks(np.arange(-1.7, 0.1, 0.05))  # X-axis ticks from 0 to 10 with a step of 1
-        plt.yticks(np.arange(-1.3, 1.3, 0.05))
+        plt.xticks(np.arange(-1.7, 0.1, 0.1))  # X-axis ticks from 0 to 10 with a step of 1
+        plt.yticks(np.arange(-1.3, 1.3, 0.1))
         plt.axhline(0, color='black', lw=0.5, ls='--')
         plt.axvline(0, color='black', lw=0.5, ls='--')
         plt.colorbar(label='Модуль функции')

@@ -1,7 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+from mpmath import mp
 import pickle
+
+
+mp.dps = 50
 
 
 def image(p):
@@ -9,10 +12,10 @@ def image(p):
 
 
 def kfnst(t):
-    with open('40n7nodes.pkl', 'rb') as file:
+    with open('14n14nodes.pkl', 'rb') as file:
         pairs = list(pickle.load(file))
         pairs.sort(key=lambda x:x[0])
-    ans = 0+0j
+    ans = mp.mpc(0,0)
     for elem in pairs:
         print(elem[0],elem[1])
         ans += elem[1] * (elem[0] / t * image(elem[0] / t))

@@ -7,7 +7,7 @@ from scipy.special import gamma, comb
 from area import get_contour, get_contour_split, get_contour_exact
 
 # Задаем параметры
-n = 40  # Порядок КФНСТ
+n = 12  # Порядок КФНСТ
 s = 1  # Параметр s
 
 def pochhammer(a, k):
@@ -22,9 +22,17 @@ def p_n_s(x):
     total = 0 + 0j
     for k in range(n + 1):
         coeff = (-1) ** (n - k) * comb(n, k) * gamma(n + s+k - 1)/gamma(n+s-1)
+        print(coeff)
         total += coeff * x ** k
     return total
 
+def p_n_s2(x):
+    total = 0 + 0j
+    for k in range(n + 1):
+        coeff = (-1) ** (n - k) * comb(n, k) * pochhammer(n + s - 1, k)
+        print(coeff)
+        total += coeff * x ** k
+    return total
 
 def p_n_s_prime(x):
     total = 0 + 0j
@@ -104,8 +112,9 @@ def save_to_file(data):
         print("saved", k, "nodes to:", out_name)
 
 if __name__ == "__main__":
-    points_amount = 500
+    p_n_s(0.1)
+'''    points_amount = 500
     for q in get_contour_exact(1e-8, desired=points_amount):
         print("Starting with", points_amount, "points")
         ans = get_nodes_alternative(q)
-        save_to_file(ans)
+        save_to_file(ans)'''
