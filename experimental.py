@@ -8,7 +8,7 @@ from area import get_contour, get_contour_split, get_contour_exact
 from mpmath import mp
 
 # Задаем параметры
-n = 14  # Порядок КФНСТ
+n = 15  # Порядок КФНСТ
 s = 1  # Параметр s
 mp.dps = 50  #точность вычислений
 
