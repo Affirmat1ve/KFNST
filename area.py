@@ -84,8 +84,6 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
                      (-0.9, -0.75, -1.1, -1), (-0.75, -0.6, -1.125, -1.05), (-0.6, -0.4, -1.125, -1.1),
                      (-0.4, -0.2, -1.15, -1.05), (-0.2, 0, -1.1, -1)]
 
-
-    net_steps = 100
     intersection_re = []
     intersection_im = []
     for q in area_split_vertical:

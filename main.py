@@ -12,12 +12,12 @@ from mpmath import mp
 from joblib import Parallel, delayed
 
 # Задаем параметры
-n = 14  # Порядок КФНСТ
+n = 15  # Порядок КФНСТ
 s = 1  # Параметр s
 mp.dps = 60  # точность вычислений
-points_amount = 500 # точек на контуре
+points_amount = 10000 # точек на контуре
 cont_tol=1e-30 # точность контура
-newton_tol = 1e-30 # точность метода ньютона
+newton_tol = 1e-50 # точность метода ньютона
 
 # Функция для вычисления символа Похгаммера (a)_k
 def pochhammer(a, k):
