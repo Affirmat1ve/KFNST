@@ -5,10 +5,10 @@ from mpmath import mp
 import pickle
 
 
-mp.dps =10
+mp.dps =80
 
 
-with open('14n14nodes.pkl', 'rb') as file:
+with open('30n8nodes.pkl', 'rb') as file:
     pairs = list(pickle.load(file))
     print(pairs)
 

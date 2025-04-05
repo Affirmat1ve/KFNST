@@ -8,48 +8,6 @@ def modulus(z):
 
     # Создаем массив значений z в комплексной плоскости
 
-
-def get_contour(tolerance, net_steps, visualize=False):
-
-    r = np.linspace(-2, -0.01, net_steps)
-    i = np.linspace(-1.5, 1.5, net_steps)
-
-    re, im = np.meshgrid(r, i)
-    z = re + 1j * im
-
-    # Вычисляем модуль
-    mod = modulus(z)
-
-    # Находим пересечения, где модуль равен 1
-    # tolerance = 0.0009  # Допуск для нахождения пересечений
-    indices = np.where(np.abs(mod - 1) < tolerance)
-
-    # Извлекаем координаты пересечений
-    intersection_re = re[indices]
-    intersection_im = im[indices]
-
-    if visualize:
-        # Визуализируем результаты
-        plt.figure(figsize=(10, 8))
-        plt.contour(re, im, mod, levels=20, cmap='viridis', alpha=0.7)
-        plt.scatter(intersection_re, intersection_im, color='red', label='Пересечения (|Z|=1)', zorder=5)
-        plt.title('Пересечения функции в комплексной плоскости')
-        plt.xlabel('Re(Z)')
-        plt.ylabel('Im(Z)')
-        plt.xticks(np.arange(-1.7, 0.1, 0.05))  # X-axis ticks from 0 to 10 with a step of 1
-        plt.yticks(np.arange(-1.3, 1.3, 0.05))
-        plt.axhline(0, color='black', lw=0.5, ls='--')
-        plt.axvline(0, color='black', lw=0.5, ls='--')
-        plt.colorbar(label='Модуль функции')
-        plt.legend()
-        plt.grid()
-        plt.show()
-    print(len(intersection_re))
-    return zip(intersection_re, intersection_im)
-
-    # Выводим координаты пересечений
-
-
 def get_contour_split(tolerance, desired = 500,visualize=False):
     area_split_29 = [(-0.2, 0, 1, 1.1), (-0.4, -0.2, 1.05, 1.15), (-0.6, -0.4, 1.1, 1.125),
                      (-0.75, -0.6, 1.05, 1.125), (-0.9, -0.75, 1, 1.1), (-1.05, -0.9, 0.9, 1.05),
@@ -133,7 +91,7 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
     for q in area_split_vertical:
         net_steps = desired//29
         for w in np.linspace(q[2],q[3],net_steps):
-            solution = root(vert_func, (q[0]+q[1])/2, args=(w,))
+            solution = root(vert_func, (q[0]+q[1])/2, args=(w,),tol = tolerance)
             intersection_re.append(solution.x[0])
             intersection_im.append(w)
     for q in area_split_horizontal:
