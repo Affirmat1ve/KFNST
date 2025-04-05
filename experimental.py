@@ -8,9 +8,9 @@ from area import get_contour, get_contour_split, get_contour_exact
 from mpmath import mp
 
 # Задаем параметры
-n = 15  # Порядок КФНСТ
+n = 14  # Порядок КФНСТ
 s = 1  # Параметр s
-mp.dps = 50  #точность вычислений
+mp.dps = 50  # точность вычислений
 
 
 # Функция для вычисления символа Похгаммера (a)_k
@@ -153,16 +153,9 @@ def save_to_file(data):
 
 
 if __name__ == "__main__":
-    split = True
-    # split = False
-    if split:
-        points_amount = 1000
-        for q in get_contour_exact(1e-8, desired=points_amount):
-            print("Starting with", points_amount, "points")
-            ans = get_nodes_alternative(q)
+    points_amount = 1000
+    for q in get_contour_exact(1e-8, desired=points_amount):
+        print("Starting with", points_amount, "points")
+        ans = get_nodes_alternative(q)
 
-            save_to_file(ans)
-    else:
-        generated_contour = get_contour(1e-8, 20000)
-        ans = get_nodes(generated_contour, need_alphas=False)
         save_to_file(ans)
