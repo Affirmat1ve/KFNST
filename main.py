@@ -1,23 +1,24 @@
 import numpy as np
-import dask
+#import dask
+#from joblib import Parallel, delayed
 import math
 import pickle
 from tqdm import tqdm
 import time
 import os
-from scipy.optimize import newton, fsolve
+#from scipy.optimize import newton, fsolve
 from scipy.special import gamma, comb
 from area import get_contour_split, get_contour_exact
 from mpmath import mp
-from joblib import Parallel, delayed
+
 
 # Задаем параметры
 n = 15  # Порядок КФНСТ
 s = 1  # Параметр s
-mp.dps = 60  # точность вычислений
-points_amount = 10000 # точек на контуре
-cont_tol=1e-30 # точность контура
-newton_tol = 1e-50 # точность метода ньютона
+mp.dps = 150  # точность вычислений
+points_amount = 700 # точек на контуре
+cont_tol=1e-70 # точность контура
+newton_tol = 1e-100 # точность метода ньютона
 
 # Функция для вычисления символа Похгаммера (a)_k
 def pochhammer(a, k):
@@ -26,29 +27,34 @@ def pochhammer(a, k):
     else:
         return np.prod([a + i for i in range(k)])
 
-
 # Функция P_n^s(x)
 def p_n_s(x):
     total = mp.mpc(0, 0)
+    lx = mp.mpc(1, 0)
     for k in range(n + 1):
         coeff = (-1) ** (n - k) * comb(n, k) * pochhammer(n + s - 1, k)
-        total += coeff * x ** k
+        total += coeff * lx
+        lx *= x
     return total
 
 
 def p_n1_s(x):
     total = mp.mpc(0, 0)
+    lx = mp.mpc(1, 0)
     for k in range(n):
         coeff = (-1) ** (n - 1 - k) * comb(n - 1, k) * pochhammer(n - 1 + s - 1, k)
-        total += coeff * x ** k
+        total += coeff * lx
+        lx *= x
     return total
 
 
 def p_n_s_prime(x):
     total = mp.mpc(0, 0)
+    lx = mp.mpc(1, 0)
     for k in range(1, n + 1):
         coeff = (-1) ** (n - k) * comb(n, k) * pochhammer(n + s - 1, k)
-        total += k * coeff * x ** (k - 1)
+        total += k * coeff * lx
+        lx *= x
     return total
 
 
@@ -64,6 +70,7 @@ def newton_method(f, fprime, x0, max_iter=100, tol=1e-10):
         z = z_next
     raise ValueError("Maximum iterations reached without convergence.")
 
+
 def get_nodes(cont, need_alphas=False):
     # Основной алгоритм
     x_alphas = []
@@ -74,6 +81,7 @@ def get_nodes(cont, need_alphas=False):
         try:
             z_0 = mp.mpc(dot[0], dot[1])  # 1. Находим точку z_0
             x_0_alpha = -z_0 / (2 * n + s - 2)  # 2. Полагаем x_0^α = -z_0 и масштабируем
+            #print(x_0_alpha)
             # 3. Реализуем метод Ньютона для нахождения корня
             x_alpha = newton_method(p_n_s, fprime=p_n_s_prime, x0=x_0_alpha, max_iter=3000, tol=newton_tol)
 
@@ -96,7 +104,7 @@ def get_nodes(cont, need_alphas=False):
             print(e)
 
     nodes_and_coeffs = set()
-    dif_ans = 1e-10 #точность различения корней
+    dif_ans = 1e-10 # точность различения корней
     k = 0
     # Выводим результаты
     for i in range(len(possible_nodes)):
@@ -133,9 +141,11 @@ def save_to_file(data):
 
 
 if __name__ == "__main__":
-    for q in get_contour_exact(cont_tol, desired=points_amount):
-        print("Starting with", points_amount, "points")
-        start_time = time.time()
-        ans = get_nodes(q)
-        print(f"Elapsed time: {time.time() - start_time:.4f} seconds")
-        save_to_file(ans)
+    countour = get_contour_exact(cont_tol, desired=points_amount)
+    print("Starting with", points_amount, "points")
+    start_time = time.time()
+    ans = get_nodes(countour)
+    print(f"Elapsed time: {time.time() - start_time:.4f} seconds")
+    print(n,"n",len(ans))
+    input("press Enter to save")
+    save_to_file(ans)

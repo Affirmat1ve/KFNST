@@ -1,11 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import root
+from mpmath import mp
+
+mp.dps = 100
 
 # Определяем функцию для вычисления модуля
 def modulus(z):
     return np.abs(np.exp(np.sqrt(1 + 1 / z ** 2)) / (z * (1 + np.sqrt(1 + 1 / z ** 2))))
 
+def modulus_mp(z):
+    return np.abs(mp.exp(mp.sqrt(1 + 1 / z ** 2)) / (z * (1 + mp.sqrt(1 + 1 / z ** 2))))
     # Создаем массив значений z в комплексной плоскости
 
 def get_contour_split(tolerance, desired = 500,visualize=False):
@@ -64,12 +69,12 @@ def get_contour_split(tolerance, desired = 500,visualize=False):
         yield zip(intersection_re, intersection_im)
 
 def vert_func(t,a):
-    z=t+1j*a
-    return np.abs(np.exp(np.sqrt(1 + 1 / z ** 2)) / (z * (1 + np.sqrt(1 + 1 / z ** 2))))-1
+    z=mp.mpc(t,a)
+    return np.abs(mp.exp(mp.sqrt(1 + 1 / z ** 2)) / (z * (1 + mp.sqrt(1 + 1 / z ** 2))))-1
 
 def hor_func(t,a):
-    z=a+1j*t
-    return np.abs(np.exp(np.sqrt(1 + 1 / z ** 2)) / (z * (1 + np.sqrt(1 + 1 / z ** 2))))-1
+    z=mp.mpc(a,t)
+    return np.abs(mp.exp(mp.sqrt(1 + 1 / z ** 2)) / (z * (1 + mp.sqrt(1 + 1 / z ** 2))))-1
 
 def get_contour_exact(tolerance, desired = 500, visualize=False):
     area_split_vertical = [(-1.2, -1.05, 0.75, 0.95), (-1.3, -1.2, 0.65, 0.8), (-1.35, -1.3, 0.55, 0.7),
@@ -84,20 +89,30 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
                      (-0.9, -0.75, -1.1, -1), (-0.75, -0.6, -1.125, -1.05), (-0.6, -0.4, -1.125, -1.1),
                      (-0.4, -0.2, -1.15, -1.05), (-0.2, 0, -1.1, -1)]
 
+    res=[]
     intersection_re = []
     intersection_im = []
     for q in area_split_vertical:
         net_steps = desired//29
         for w in np.linspace(q[2],q[3],net_steps):
-            solution = root(vert_func, (q[0]+q[1])/2, args=(w,),tol = tolerance)
-            intersection_re.append(solution.x[0])
-            intersection_im.append(w)
+            try:
+                solution = mp.findroot(lambda x: vert_func(x,w), (q[0]+q[1])/2,tol = tolerance)
+                res.append((solution, w))
+                intersection_re.append(solution)
+                intersection_im.append(w)
+            except: print("V",w)
+            #solution = root(vert_func, (q[0]+q[1])/2, args=(w,),tol = tolerance)
+
     for q in area_split_horizontal:
         net_steps = desired // 29
         for w in np.linspace(q[0], q[1], net_steps):
-            solution = root(hor_func, (q[2] + q[3]) / 2, args=(w,))
-            intersection_re.append(w)
-            intersection_im.append(solution.x[0])
+            try:
+                solution = mp.findroot(lambda x: hor_func(x,w), (q[2] + q[3]) / 2, tol = tolerance)
+                #solution = root(hor_func, (q[2] + q[3]) / 2, args=(w,))
+                res.append((w,solution))
+                intersection_re.append(w)
+                intersection_im.append(solution)
+            except: print("H",w)
     if visualize:
         # Визуализируем результаты
         plt.figure(figsize=(10, 8))
@@ -113,8 +128,7 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
         plt.legend()
         plt.grid()
         plt.show()
-
-    yield zip(intersection_re, intersection_im)
+    return res
 
 def res_print(intersection_re, intersection_im):
     print("Координаты пересечений (|Z|=1):")
@@ -123,5 +137,7 @@ def res_print(intersection_re, intersection_im):
 
 
 if __name__ == "__main__":
-    for q in get_contour_exact(1e-8, desired=1000, visualize=True):
-        print(q)
+
+    q = get_contour_exact(1e-8, desired=1000, visualize=True)
+    print(hor_func(q[12][1],q[12][0]))
+    print(len(q))
