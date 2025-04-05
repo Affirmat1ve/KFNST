@@ -1,16 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from tqdm import tqdm
 from mpmath import mp
 import pickle
 
 
 mp.dps =80
-
-
-with open('30n8nodes.pkl', 'rb') as file:
+filename = '14n14nodes.pkl'
+filepath = os.path.join('results', filename)
+with open(filepath, 'rb') as file:
     pairs = list(pickle.load(file))
-    print(pairs)
+    for q in pairs:
+        print(q[0],q[1])
 
 
 def image(p):

@@ -1,7 +1,10 @@
 import numpy as np
+import dask
 import math
 import pickle
 from tqdm import tqdm
+import time
+import os
 from scipy.optimize import newton, fsolve
 from scipy.special import gamma, comb
 from area import get_contour_split, get_contour_exact
@@ -9,10 +12,10 @@ from mpmath import mp
 from joblib import Parallel, delayed
 
 # Задаем параметры
-n = 30  # Порядок КФНСТ
+n = 14  # Порядок КФНСТ
 s = 1  # Параметр s
 mp.dps = 30  # точность вычислений
-points_amount = 15000 # точек на контуре
+points_amount = 500 # точек на контуре
 cont_tol=1e-15 # точность контура
 newton_tol = 1e-15
 
@@ -70,34 +73,37 @@ def newton_method(f, fprime, x0, max_iter=100, tol=1e-10):
         z = z_next
     raise ValueError("Maximum iterations reached without convergence.")
 
-
+def do(dot):
+    try:
+        # 1. Находим точку z_0
+        z_0 = mp.mpc(dot[0], dot[1])  # z_0 из контура
+        # 2. Полагаем x_0^α = -z_0
+        x_0_alpha = -z_0 / (2 * n + s - 2)
+        # 3. Реализуем метод Ньютона для нахождения корня
+        x_alpha = newton_method(p_n_s, fprime=p_n_s_prime, x0=x_0_alpha, max_iter=3000, tol=1e-9)
+        # print(x_alpha)
+        return x_alpha
+    except Exception as e:
+        print("crashed on",dot)
+        print(e)
 def get_nodes_parallel(cont, need_alphas=False):
     # Основной алгоритм
     x_alphas = []
     possible_nodes = []
     coefficients = []
-    skip_n = 0
 
-    def do(dot):
-        try:
-            # 1. Находим точку z_0
-            z_0 = mp.mpc(dot[0], dot[1])  # z_0 из контура
-            # 2. Полагаем x_0^α = -z_0
-            x_0_alpha = -z_0 / (2 * n + s - 2)
-            # 3. Реализуем метод Ньютона для нахождения корня
-            x_alpha = newton_method(p_n_s, fprime=p_n_s_prime, x0=x_0_alpha, max_iter=3000, tol=1e-9)
-            # print(x_alpha)
-            return x_alpha
+    delayed_results = [dask.delayed(do)(i) for i in cont]
 
-        except Exception as e:
-            print(e)
-
-    for x_alpha in Parallel(n_jobs=8)(delayed(do)(e) for e in cont):
+    # Step 3: Create a task graph (this does not execute the function yet)
+    # Step 4: Compute the results in parallel
+    results = dask.compute(*delayed_results)
+    for x_alpha in tqdm(results):
         # проверка на корректность найденного корня
+        if x_alpha is None:
+            continue
         if np.abs(p_n_s(x_alpha)) > 1e-6:
             print("skip")
             continue
-
         # 2 проверка на корректность найденного корня
         if x_alpha.real < 0:
             continue
@@ -213,15 +219,23 @@ def get_nodes_alternative(cont, need_alphas=False):
 
 def save_to_file(data):
     k = len(data)
-    out_name = "" + str(n) + "n" + str(k) + "nodes" + ".pkl"
-    with open(out_name, 'wb') as out_file:
-        pickle.dump(data, out_file)
-        print("saved", k, "nodes to:", out_name)
+    directory = 'results'
+    filename = "" + str(n) + "n" + str(k) + "nodes" + ".pkl"
+    filepath = os.path.join(directory, filename)
+    # Create the directory if it doesn't exist
+    os.makedirs(directory, exist_ok=True)
+    with open(filepath, 'wb') as outfile:
+        pickle.dump(data, outfile)
+        print("saved", k, "nodes to:", outfile)
 
 
 if __name__ == "__main__":
     for q in get_contour_exact(cont_tol, desired=points_amount):
         print("Starting with", points_amount, "points")
+
+        start_time = time.time()
         ans = get_nodes_alternative(q)
+        #ans = get_nodes_parallel(q)
+        print(f"Elapsed time: {time.time() - start_time:.4f} seconds")
 
         save_to_file(ans)
