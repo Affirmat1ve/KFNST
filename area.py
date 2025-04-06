@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import root
 from mpmath import mp
 
-mp.dps = 100
+mp.dps = 150
 
 # Определяем функцию для вычисления модуля
 def modulus(z):
@@ -138,6 +138,5 @@ def res_print(intersection_re, intersection_im):
 
 if __name__ == "__main__":
 
-    q = get_contour_exact(1e-8, desired=1000, visualize=True)
-    print(hor_func(q[12][1],q[12][0]))
+    q = get_contour_exact(1e-70, desired=1000, visualize=True)
     print(len(q))
