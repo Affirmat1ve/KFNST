@@ -92,19 +92,21 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
     res=[]
     intersection_re = []
     intersection_im = []
+    error_count=0
     for q in area_split_vertical:
-        net_steps = desired//29
+        net_steps = desired//29 + 1
         for w in np.linspace(q[2],q[3],net_steps):
             try:
                 solution = mp.findroot(lambda x: vert_func(x,w), (q[0]+q[1])/2,tol = tolerance)
                 res.append((solution, w))
                 intersection_re.append(solution)
                 intersection_im.append(w)
-            except: print("V",w)
+            except:
+                error_count+=1
             #solution = root(vert_func, (q[0]+q[1])/2, args=(w,),tol = tolerance)
 
     for q in area_split_horizontal:
-        net_steps = desired // 29
+        net_steps = desired // 29 + 1
         for w in np.linspace(q[0], q[1], net_steps):
             try:
                 solution = mp.findroot(lambda x: hor_func(x,w), (q[2] + q[3]) / 2, tol = tolerance)
@@ -112,7 +114,8 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
                 res.append((w,solution))
                 intersection_re.append(w)
                 intersection_im.append(solution)
-            except: print("H",w)
+            except:
+                error_count += 1
     if visualize:
         # Визуализируем результаты
         plt.figure(figsize=(10, 8))
@@ -128,6 +131,7 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
         plt.legend()
         plt.grid()
         plt.show()
+    print("Errors on countour",error_count)
     return res
 
 def res_print(intersection_re, intersection_im):
