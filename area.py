@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import root
 from mpmath import mp
 
+# объявляем точность переменных
 mp.dps = 150
 
 # Определяем функцию для вычисления модуля
@@ -103,14 +103,12 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
                 intersection_im.append(w)
             except:
                 error_count+=1
-            #solution = root(vert_func, (q[0]+q[1])/2, args=(w,),tol = tolerance)
 
     for q in area_split_horizontal:
         net_steps = desired // 29 + 1
         for w in np.linspace(q[0], q[1], net_steps):
             try:
                 solution = mp.findroot(lambda x: hor_func(x,w), (q[2] + q[3]) / 2, tol = tolerance)
-                #solution = root(hor_func, (q[2] + q[3]) / 2, args=(w,))
                 res.append((w,solution))
                 intersection_re.append(w)
                 intersection_im.append(solution)
@@ -131,6 +129,7 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
         plt.legend()
         plt.grid()
         plt.show()
+    # печатаем количество ошибок при приближении контура
     print("Errors on countour",error_count)
     return res
 
@@ -141,6 +140,6 @@ def res_print(intersection_re, intersection_im):
 
 
 if __name__ == "__main__":
-
+    # ручной вызов рисунка
     q = get_contour_exact(1e-70, desired=1000, visualize=True)
     print(len(q))
