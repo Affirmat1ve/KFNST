@@ -4,7 +4,7 @@ import pickle
 from tqdm import tqdm #это библиотека для прогресс-бара
 import time
 import os
-from scipy.special import gamma, comb
+from scipy.special import gamma, comb, beta
 from area import get_contour_exact # это мой метод приближения контура
 from mpmath import mp
 
@@ -74,7 +74,14 @@ def calculate_pairs(n,s=1,filename_prefix="",directory = 'new_results'):
                 p_kn = mp.mpc(1 / x_alpha)
                 coefficient_a_kn = mp.mpc((-1) ** (n%2 + 1) * math.factorial(n) * (2 * n + s - 2) ** 2)
                 coefficient_a_kn /= n ** 2 * gamma(n + s - 1) * p_kn ** 2 * (p_n1_s(1 / p_kn)) ** 2
-                if mp.isnan(coefficient_a_kn) or mp.isnan(p_kn): continue
+                #coefficient_a_kn = mp.mpc((-1) ** (n % 2 + 1)*n*beta(n,s-1)  * (2 * n + s - 2) ** 2)
+                #coefficient_a_kn /= n ** 2  *gamma(s-1)* p_kn ** 2 * (p_n1_s(1 / p_kn)) ** 2
+                if mp.isnan(p_kn):
+                    print("p_n NaN")
+                    continue
+                if mp.isnan(coefficient_a_kn):
+                    print("A_kn NaN")
+                    continue
                 # Сохраняем результаты
                 x_alphas.append(x_alpha)
                 possible_nodes.append(p_kn)
@@ -112,8 +119,8 @@ def calculate_pairs(n,s=1,filename_prefix="",directory = 'new_results'):
                     ok_flag = False
                     break
             if ok_flag:
-                print(f"\033[32m Results are Correct!\033[0m")
-                save_to_file(nodes_and_coeffs)
+                print("\033[32m Results are Correct!\033[0m")
+                #save_to_file(nodes_and_coeffs)
             else:
                 print("Results are incorrect")
         else: print("Results are incorrect")
@@ -131,7 +138,7 @@ def calculate_pairs(n,s=1,filename_prefix="",directory = 'new_results'):
     def save_to_file(data):
         k = len(data)
 
-        filename = filename_prefix+"n" + str(k) + ".pkl"
+        filename = filename_prefix+"s"+str(s)+"n" + str(k) + ".pkl"
         filepath = os.path.join(directory, filename)
         # создаем папку с результатами, если её нет
         os.makedirs(directory, exist_ok=True)
@@ -146,8 +153,9 @@ def calculate_pairs(n,s=1,filename_prefix="",directory = 'new_results'):
     ans = get_nodes(countour, print_roots=False)
     print(f"Elapsed time: {time.time() - start_time:.4f} seconds")
     print(n, "n", len(ans))
-    #if input("type q to skip")!='q':
-        #save_to_file(ans)
+    print(""+filename_prefix+"s"+str(s)+"n" + str(n) + ".pkl")
+    if input("type q to skip",)!='q':
+        save_to_file(ans)
 
 
 
@@ -155,8 +163,8 @@ def calculate_pairs(n,s=1,filename_prefix="",directory = 'new_results'):
 if __name__ == "__main__":
 
     # Задаем важный параметр
-    kfnst_n = 10 # Порядок КФНСТ
+    kfnst_n = 100 # Порядок КФНСТ
     # Задаем второстепенные параметры
     save_dir = 'new_results' # папка для результатов
-    for q in range(15,150,5):
-        calculate_pairs(q, directory=save_dir)
+
+    calculate_pairs(kfnst_n, directory=save_dir, s=1)
