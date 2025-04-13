@@ -19,7 +19,7 @@ def image_sin(p):
 
 
 def draw(n, chosen_image=image_sin, stop=100, gp=1000, s=1):
-    mp.dps = n // 2 + 50
+    mp.dps = n // 2 + 100
     filename = 's' + str(s) + 'n' + str(n) + '.pkl'
     filepath = os.path.join('new_results', filename)
     with open(filepath, 'rb') as file:
@@ -38,11 +38,13 @@ def draw(n, chosen_image=image_sin, stop=100, gp=1000, s=1):
     d = []
     for q in tqdm(x, desc="processing points on graph"):
         y.append(float(kfnst(q, chosen_image).real))
-        # z.append(mp.besselj(0, q))
-        # d.append(float(kfnst(q, image_bessel).real) - mp.besselj(0, q))
+        #z.append(mp.besselj(0, q))
+        z.append(mp.sin(q))
+        #d.append(float(kfnst(q, chosen_image).real) - mp.besselj(0, q))
+        d.append(float(kfnst(q, chosen_image).real) - mp.sin(q))
     plt.plot(x, y)
-    # plt.plot(x, z)
-    # plt.plot(x, d)
+    plt.plot(x, z)
+    plt.plot(x, d)
     plt.title("Graph for n = " + str(n))
     plt.xlabel("X-axis Label")
     plt.ylabel("Y-axis Label")
@@ -51,8 +53,8 @@ def draw(n, chosen_image=image_sin, stop=100, gp=1000, s=1):
 
 
 if __name__ == "__main__":
-    right_margin = 100  # задать до какого значения t нарисовать график
+    right_margin = 250  # задать до какого значения t нарисовать график
     number_of_points = 1000  # количество точек на графике
-    s_value = 1
-    n_value = 100
+    s_value = 3
+    n_value = 50
     draw(n=n_value, chosen_image=image_sin, stop=right_margin, gp=number_of_points, s=s_value)

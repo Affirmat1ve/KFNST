@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import pickle
-from tqdm import tqdm #это библиотека для прогресс-бара
+from tqdm import tqdm # это библиотека для прогресс-бара
 import time
 import os
 from scipy.special import gamma, comb, beta
@@ -72,12 +72,14 @@ def calculate_pairs(n,s=1,filename_prefix="",directory = 'new_results'):
 
                 # 4. Вычисляем искомый узел КФНСТ и его коэффициент
                 p_kn = mp.mpc(1 / x_alpha)
-                coefficient_a_kn = mp.mpc((-1) ** (n%2 + 1) * math.factorial(n) * (2 * n + s - 2) ** 2)
-                coefficient_a_kn /= n ** 2 * gamma(n + s - 1) * p_kn ** 2 * (p_n1_s(1 / p_kn)) ** 2
-                #coefficient_a_kn = mp.mpc((-1) ** (n % 2 + 1)*n*beta(n,s-1)  * (2 * n + s - 2) ** 2)
-                #coefficient_a_kn /= n ** 2  *gamma(s-1)* p_kn ** 2 * (p_n1_s(1 / p_kn)) ** 2
+                if s==1:
+                    coefficient_a_kn = mp.mpc((-1) ** (n%2 + 1) * n * (2 * n + s - 2) ** 2)
+                    coefficient_a_kn /= n ** 2 * p_kn ** 2 * (p_n1_s(1 / p_kn)) ** 2
+                else:
+                    coefficient_a_kn = mp.mpc((-1) ** (n % 2 + 1)*n*beta(n,s-1)  * (2 * n + s - 2) ** 2)
+                    coefficient_a_kn /= n ** 2  *gamma(s-1)* p_kn ** 2 * (p_n1_s(1 / p_kn)) ** 2
                 if mp.isnan(p_kn):
-                    print("p_n NaN")
+                    print("p_kn NaN")
                     continue
                 if mp.isnan(coefficient_a_kn):
                     print("A_kn NaN")
@@ -111,19 +113,18 @@ def calculate_pairs(n,s=1,filename_prefix="",directory = 'new_results'):
         # Верифицируем результат
         if len(nodes_and_coeffs)==n:
             ok_flag = True
-            for m in range(n):
+            for m in tqdm(range(n), desc="Verifying results"):
                 summ = 0
                 for z in nodes_and_coeffs: summ += z[1] * z[0] ** (-m)
                 summ -= 1 / gamma(s + m)
                 if np.abs(summ) > 1e-5:
                     ok_flag = False
+                    print(f"Results are incorrect {np.abs(summ)}")
                     break
             if ok_flag:
                 print("\033[32m Results are Correct!\033[0m")
-                #save_to_file(nodes_and_coeffs)
-            else:
-                print("Results are incorrect")
-        else: print("Results are incorrect")
+                save_to_file(nodes_and_coeffs)
+        else: print(f"Results are incorrect {len(nodes_and_coeffs)}")
 
         # сохраняем полученные корни многочлена
         if need_alphas:
@@ -132,7 +133,7 @@ def calculate_pairs(n,s=1,filename_prefix="",directory = 'new_results'):
                 pickle.dump(x_alphas, out_file)
 
         # печатаем количество несошедшихся вызовов метода ньютона
-        print("Errors occured", error_count)
+        # print("Errors occured", error_count)
         return nodes_and_coeffs
 
     def save_to_file(data):
@@ -146,16 +147,15 @@ def calculate_pairs(n,s=1,filename_prefix="",directory = 'new_results'):
             pickle.dump(data, outfile)  # сохраняем массив узлов и коэффициентов
             print("saved", k, "nodes to:", filename)
 
-
-    countour = get_contour_exact(cont_tol, desired=points_amount)
-    print("Starting with approx", points_amount, "points")
     start_time = time.time()
+    countour = get_contour_exact(cont_tol, desired=points_amount)
+    print("Starting with approx", points_amount, "points.",f"Contour calc time: {time.time() - start_time:.2f} seconds")
     ans = get_nodes(countour, print_roots=False)
-    print(f"Elapsed time: {time.time() - start_time:.4f} seconds")
-    print(n, "n", len(ans))
-    print(""+filename_prefix+"s"+str(s)+"n" + str(n) + ".pkl")
-    if input("type q to skip",)!='q':
-        save_to_file(ans)
+    print(f"Full work time: {time.time() - start_time:.2f} seconds")
+    #print(n, "n", len(ans))
+    #print(""+filename_prefix+"s"+str(s)+"n" + str(n) + ".pkl")
+    #if input("type q to skip",)!='q':
+        #save_to_file(ans)
 
 
 
@@ -166,5 +166,5 @@ if __name__ == "__main__":
     kfnst_n = 100 # Порядок КФНСТ
     # Задаем второстепенные параметры
     save_dir = 'new_results' # папка для результатов
-
+    #for q in range(10,150,5): calculate_pairs(q, directory=save_dir, s=1)
     calculate_pairs(kfnst_n, directory=save_dir, s=1)

@@ -130,7 +130,7 @@ def get_contour_exact(tolerance, desired = 500, visualize=False):
         plt.grid()
         plt.show()
     # печатаем количество ошибок при приближении контура
-    print("Errors on countour",error_count)
+    # print("Errors on countour",error_count)
     return res
 
 def res_print(intersection_re, intersection_im):
