@@ -1,21 +1,21 @@
 import numpy as np
 import math
 import pickle
-from tqdm import tqdm #это библиотека для прогресс-бара
+from tqdm import tqdm # это библиотека для прогресс-бара
 import time
 import os
-from scipy.special import gamma, comb
+from scipy.special import gamma, comb, beta
 from area import get_contour_exact # это мой метод приближения контура
 from mpmath import mp
 
 
-def calculate_pairs(n,s=1):
-    accuracy = int(2.4*n)
+def calculate_pairs(n,s=1,filename_prefix="",directory = 'new_results', exp=0):
+    accuracy = int(3.4*n)
     mp.dps = accuracy  # точность вычислений
-    points_amount = int(2.4*n)+5  # точек на контуре
-    cont_tol = 1e-120  # точность контура
-    newton_tol = mp.power(10,-(accuracy//1.25)-5) # точность метода ньютона
-
+    points_amount = int(2.4*n)+10  # точек на контуре
+    cont_tol = mp.power(10,-(accuracy//(1+0.1*exp))-10)  # точность контура
+    newton_tol = mp.power(10,-(accuracy//(1+0.1*exp))-10) # точность метода ньютона
+    print(f"dps {accuracy} cont ans newton {accuracy//(1+0.1*exp)+10}")
     # создаем контур из заданного количества точек
 
 
@@ -71,14 +71,23 @@ def calculate_pairs(n,s=1):
                 if x_alpha.real < 0: continue
 
                 # 4. Вычисляем искомый узел КФНСТ и его коэффициент
-                p_kn = 1 / x_alpha
-                coefficients_A_kn = ((-1) ** (n + 1) * math.factorial(n) * (2 * n + s - 2) ** 2) / (
-                        n ** 2 * gamma(n + s - 1) * p_kn ** 2 * (p_n1_s(1 / p_kn)) ** 2)
-
+                p_kn = mp.mpc(1 / x_alpha)
+                if s==1:
+                    coefficient_a_kn = mp.mpc((-1) ** (n%2 + 1) * n * (2 * n + s - 2) ** 2)
+                    coefficient_a_kn /= n ** 2 * p_kn ** 2 * (p_n1_s(1 / p_kn)) ** 2
+                else:
+                    coefficient_a_kn = mp.mpc((-1) ** (n % 2 + 1)*n*beta(n,s-1)  * (2 * n + s - 2) ** 2)
+                    coefficient_a_kn /= n ** 2  *gamma(s-1)* p_kn ** 2 * (p_n1_s(1 / p_kn)) ** 2
+                if mp.isnan(p_kn):
+                    print("p_kn NaN")
+                    continue
+                if mp.isnan(coefficient_a_kn):
+                    print("A_kn NaN")
+                    continue
                 # Сохраняем результаты
                 x_alphas.append(x_alpha)
                 possible_nodes.append(p_kn)
-                coefficients.append(coefficients_A_kn)
+                coefficients.append(coefficient_a_kn)
             except Exception as e:
                 # print(e)
                 error_count += 1
@@ -104,18 +113,18 @@ def calculate_pairs(n,s=1):
         # Верифицируем результат
         if len(nodes_and_coeffs)==n:
             ok_flag = True
-            for m in range(n):
+            for m in tqdm(range(n), desc="Verifying results"):
                 summ = 0
                 for z in nodes_and_coeffs: summ += z[1] * z[0] ** (-m)
                 summ -= 1 / gamma(s + m)
                 if np.abs(summ) > 1e-5:
                     ok_flag = False
+                    print(f"Results are incorrect {np.abs(summ)}")
                     break
             if ok_flag:
-                save_to_file(nodes_and_coeffs)
-            else:
-                print("Results are incorrect")
-        else: print("Results are incorrect")
+                print("\033[32m Results are Correct!\033[0m")
+                #save_to_file(nodes_and_coeffs)
+        else: print(f"Results are incorrect {len(nodes_and_coeffs)}")
 
         # сохраняем полученные корни многочлена
         if need_alphas:
@@ -124,13 +133,13 @@ def calculate_pairs(n,s=1):
                 pickle.dump(x_alphas, out_file)
 
         # печатаем количество несошедшихся вызовов метода ньютона
-        print("Errors occured", error_count)
+        # print("Errors occured", error_count)
         return nodes_and_coeffs
 
     def save_to_file(data):
         k = len(data)
-        directory = 'results'
-        filename = "exp" + str(n) + "n" + str(k) + "nodes" + ".pkl"
+
+        filename = filename_prefix+"s"+str(s)+"n" + str(k) + ".pkl"
         filepath = os.path.join(directory, filename)
         # создаем папку с результатами, если её нет
         os.makedirs(directory, exist_ok=True)
@@ -138,20 +147,25 @@ def calculate_pairs(n,s=1):
             pickle.dump(data, outfile)  # сохраняем массив узлов и коэффициентов
             print("saved", k, "nodes to:", filename)
 
-
-    countour = get_contour_exact(cont_tol, desired=points_amount)
-    print("Starting with", points_amount, "points")
     start_time = time.time()
+    countour = get_contour_exact(cont_tol, desired=points_amount)
+    print("Starting with approx", points_amount, "points.",f"Contour calc time: {time.time() - start_time:.2f} seconds")
     ans = get_nodes(countour, print_roots=False)
-    print(f"Elapsed time: {time.time() - start_time:.4f} seconds")
-    print(n, "n", len(ans))
-
+    print(f"Full work time: {time.time() - start_time:.2f} seconds")
+    #print(n, "n", len(ans))
+    #print(""+filename_prefix+"s"+str(s)+"n" + str(n) + ".pkl")
+    #if input("type q to skip",)!='q':
+        #save_to_file(ans)
 
 
 
 
 if __name__ == "__main__":
 
-    # Задаем параметры
-    for q in range(10,100,5):  # Порядок КФНСТ
-        calculate_pairs(q)
+    # Задаем важный параметр
+    kfnst_n = 100 # Порядок КФНСТ
+    # Задаем второстепенные параметры
+    save_dir = 'exp' # папка для результатов
+    #for q in range(10,150,5): calculate_pairs(q, directory=save_dir, s=1)
+    for q in range(10):
+        calculate_pairs(kfnst_n, directory=save_dir, s=1, exp = q)
